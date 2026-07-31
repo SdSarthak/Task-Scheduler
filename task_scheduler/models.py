@@ -12,10 +12,10 @@ Hierarchy::
 import itertools
 import time
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from .config import DATETIME_FORMAT, FREQUENCY_DAYS, Priority
-from .dates import coerce_datetime, format_datetime, humanize_delta
+from .dates import coerce_datetime, format_datetime, humanize_delta, now as clock_now
 from .exceptions import UnknownPriorityError, ValidationError
 
 _id_counter = itertools.count(1)
@@ -63,7 +63,7 @@ class Task(TaskInterface):
         task_id=None,
     ):
         self.__task_id = task_id or generate_task_id()
-        self.__created_at = coerce_datetime(created_at, "creation date") or datetime.now()
+        self.__created_at = coerce_datetime(created_at, "creation date") or clock_now()
         self.__completed = bool(completed)
         self.__completed_at = coerce_datetime(completed_at, "completion date")
         self.title = title
@@ -139,7 +139,7 @@ class Task(TaskInterface):
         if self.__completed:
             return False
         self.__completed = True
-        self.__completed_at = coerce_datetime(when, "completion date") or datetime.now()
+        self.__completed_at = coerce_datetime(when, "completion date") or clock_now()
         return True
 
     def reopen(self):
@@ -154,7 +154,7 @@ class Task(TaskInterface):
         """True when the task has a past deadline and is not yet complete."""
         if self.__completed or self.__due_date is None:
             return False
-        return self.__due_date < (now or datetime.now())
+        return self.__due_date < (now or clock_now())
 
     def matches(self, term):
         """Case-insensitive substring search over title and description."""
@@ -172,7 +172,7 @@ class Task(TaskInterface):
     # TaskInterface
     # ------------------------------------------------------------------
     def display(self, now=None):
-        now = now or datetime.now()
+        now = now or clock_now()
         marker = "x" if self.__completed else "o"
         lines = [
             "[{}] {}".format(self.__task_id, self.__title),
@@ -288,7 +288,7 @@ class HighPriorityTask(Task):
         return humanize_delta(self.deadline, now)
 
     def display(self, now=None):
-        now = now or datetime.now()
+        now = now or clock_now()
         text = super().display(now)
         if self.deadline is not None and not self.completed:
             text += "\nDeadline: {} ({})".format(
@@ -367,7 +367,7 @@ class RoutineTask(Task):
         A routine task never stays completed: completing it counts the
         occurrence and schedules the next one.
         """
-        moment = coerce_datetime(when, "completion date") or datetime.now()
+        moment = coerce_datetime(when, "completion date") or clock_now()
         self.__occurrences += 1
         upcoming = self.next_due
         while upcoming <= moment:
@@ -376,7 +376,7 @@ class RoutineTask(Task):
         return True
 
     def display(self, now=None):
-        now = now or datetime.now()
+        now = now or clock_now()
         text = super().display(now)
         text += "\nRepeats: {}".format(self.__frequency)
         if self.__occurrences:

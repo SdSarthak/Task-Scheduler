@@ -5,10 +5,9 @@ is delegated to :class:`~task_scheduler.manager.TaskManager`.
 """
 
 import sys
-from datetime import datetime
 
 from .config import FREQUENCY_DAYS, PRIORITY_ORDER, Priority, get_data_file
-from .dates import parse_datetime
+from .dates import now as clock_now, parse_datetime
 from .exceptions import TaskSchedulerError
 from .factory import TaskFactory
 from .manager import TaskManager
@@ -64,6 +63,8 @@ class CLIInterface:
         self.manager = manager if manager is not None else TaskManager()
         self.stream = stream or sys.stdout
         self._running = False
+        #: Set once stdin is exhausted so the menu loop stops instead of spinning.
+        self.input_closed = False
 
     # ------------------------------------------------------------------
     # Output helpers
@@ -80,10 +81,15 @@ class CLIInterface:
     # Input helpers
     # ------------------------------------------------------------------
     def prompt(self, message):
-        """Read a line, treating EOF/Ctrl-C as an empty answer."""
+        """Read a line, treating EOF/Ctrl-C as an empty answer.
+
+        Exhausted input also flips :attr:`input_closed` so the menu loop
+        exits rather than re-prompting a stream that can never answer.
+        """
         try:
             return input(message).strip()
         except (EOFError, KeyboardInterrupt):
+            self.input_closed = True
             self.write()
             return ""
 
@@ -158,7 +164,7 @@ class CLIInterface:
         if not tasks:
             self.write(empty_message)
             return
-        now = datetime.now()
+        now = clock_now()
         for number, task in enumerate(tasks, 1):
             self.write()
             self.write("{}. {}".format(number, task.display(now).replace("\n", "\n   ")))
@@ -346,7 +352,7 @@ class CLIInterface:
         while self._running:
             self.show_menu()
             choice = self.prompt("Select an option (0-11): ")
-            if choice == "0":
+            if choice == "0" or self.input_closed:
                 self._running = False
                 break
             action = actions.get(choice)

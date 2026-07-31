@@ -6,18 +6,27 @@ from .config import DATETIME_FORMAT, INPUT_DATE_FORMATS
 from .exceptions import ValidationError
 
 
-def parse_datetime(value, field="date"):
-    """Parse ``value`` into a ``datetime``.
+def now():
+    """Current time at the precision the scheduler stores.
 
-    Accepts ``datetime`` instances (returned unchanged) and strings in any
-    of :data:`~task_scheduler.config.INPUT_DATE_FORMATS`. A bare date is
+    Timestamps are persisted to the second, so truncating here keeps an
+    in-memory task byte-identical to the same task reloaded from disk.
+    """
+    return datetime.now().replace(microsecond=0)
+
+
+def parse_datetime(value, field="date"):
+    """Parse ``value`` into a ``datetime`` truncated to whole seconds.
+
+    Accepts ``datetime`` instances and strings in any of
+    :data:`~task_scheduler.config.INPUT_DATE_FORMATS`. A bare date is
     interpreted as midnight of that day.
 
     Raises:
         ValidationError: if the value cannot be interpreted.
     """
     if isinstance(value, datetime):
-        return value
+        return value.replace(microsecond=0)
     if not isinstance(value, str) or not value.strip():
         raise ValidationError("{} must be a non-empty date string.".format(field.capitalize()))
     text = value.strip()
@@ -47,10 +56,9 @@ def format_datetime(value):
     return value.strftime(DATETIME_FORMAT)
 
 
-def humanize_delta(target, now=None):
-    """Describe how far ``target`` is from ``now`` in coarse, readable terms."""
-    now = now or datetime.now()
-    delta = target - now
+def humanize_delta(target, reference=None):
+    """Describe how far ``target`` is from ``reference`` in coarse, readable terms."""
+    delta = target - (reference or now())
     seconds = int(abs(delta.total_seconds()))
     days, seconds = divmod(seconds, 86400)
     hours, seconds = divmod(seconds, 3600)

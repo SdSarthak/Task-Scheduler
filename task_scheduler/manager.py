@@ -4,9 +4,10 @@
 and HAS-A list of tasks (aggregation).
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from .config import Priority, get_upcoming_days, priority_rank
+from .dates import now as clock_now
 from .exceptions import TaskNotFoundError, UnknownPriorityError, ValidationError
 from .factory import TaskFactory
 from .models import HighPriorityTask, RoutineTask
@@ -85,7 +86,7 @@ class TaskManager:
 
     def filter(self, priority=None, completed=None, overdue=None, now=None):
         """Return tasks matching every supplied criterion."""
-        now = now or datetime.now()
+        now = now or clock_now()
         resolved = None
         if priority is not None:
             resolved = Priority.from_value(priority)
@@ -122,7 +123,7 @@ class TaskManager:
         Pending tasks always sort ahead of completed ones. Tasks without a due
         date sort last within the ``due_date`` ordering.
         """
-        now = now or datetime.now()
+        now = now or clock_now()
         far_future = now + timedelta(days=365 * 100)
 
         keys = {
@@ -238,7 +239,7 @@ class TaskManager:
     # ------------------------------------------------------------------
     def upcoming(self, days=None, now=None):
         """Pending tasks due within ``days`` (default from configuration)."""
-        now = now or datetime.now()
+        now = now or clock_now()
         window = now + timedelta(days=get_upcoming_days() if days is None else int(days))
         return sorted(
             (
@@ -251,7 +252,7 @@ class TaskManager:
 
     def statistics(self, now=None):
         """Aggregate counts used by the statistics view."""
-        now = now or datetime.now()
+        now = now or clock_now()
         total = len(self._tasks)
         completed = len(self.completed(now))
         pending = total - completed
