@@ -1,109 +1,64 @@
-# Task Scheduler CLI - Advanced OOP Python Implementation
+# Task Scheduler CLI
 
-A comprehensive command-line task scheduler application that demonstrates advanced Object-Oriented Programming concepts in Python. This application provides a complete task management system with multiple priority categories, task types, and full CRUD operations.
+A command-line task manager built as a study in object-oriented Python. Tasks are
+organised into eight priority categories; the category decides which kind of task
+object you get, so an urgent item tracks a deadline and escalates while a routine
+item reschedules itself every time you complete it.
 
-## 🚀 Features
+Standard library only — no runtime dependencies.
 
-### Core Functionality
-- **Add Tasks**: Create tasks with different priorities and types
-- **Remove Tasks**: Delete tasks by ID or selection
-- **Transfer Tasks**: Move tasks between priority categories
-- **Complete Tasks**: Mark tasks as done with timestamp tracking
-- **Search Tasks**: Find tasks by title or description
-- **View Tasks**: Multiple filtering options (all, by priority, completed, pending)
-- **Statistics**: Comprehensive task analytics and reporting
+## Features
 
-### Task Categories
-1. **High Priority** - Urgent tasks with optional deadlines and escalation
-2. **Low Priority** - Less urgent, general tasks
-3. **To Do** - Standard tasks to be completed
-4. **Prefer To Do** - Tasks you'd like to complete when possible
-5. **Urgent** - Critical tasks requiring immediate attention
-6. **Routine** - Recurring tasks with frequency settings
-7. **Personal** - Personal life and self-care tasks
-8. **Work** - Professional and work-related tasks
+- **Add tasks** in any of eight priority categories
+- **Complete tasks** with a recorded timestamp (routine tasks roll forward instead)
+- **Remove tasks** with confirmation
+- **Transfer tasks** between priority categories, rebuilding the task type as needed
+- **Search** by keyword across titles and descriptions
+- **View** all, pending, completed, or a single priority
+- **Statistics** covering completion rate, overdue counts and a priority breakdown
+- **Automatic escalation** of overdue high-priority tasks at startup
+- **Crash-safe storage** — atomic writes, and a damaged data file is quarantined
+  rather than taking the app down with it
 
-### Task Types
-- **Regular Tasks**: Basic tasks with title, description, and priority
-- **High Priority Tasks**: Include deadline management and escalation features
-- **Routine Tasks**: Recurring tasks with frequency settings (daily, weekly, monthly)
+### Priority categories
 
-## 🏗️ Object-Oriented Programming Concepts Demonstrated
+| Category | Task class | Extra behaviour |
+| --- | --- | --- |
+| Urgent | `HighPriorityTask` | deadline tracking, escalation |
+| High Priority | `HighPriorityTask` | deadline tracking, escalation |
+| Work | `Task` | — |
+| To Do | `Task` | — |
+| Routine | `RoutineTask` | daily/weekly/monthly recurrence |
+| Personal | `Task` | — |
+| Prefer To Do | `Task` | — |
+| Low Priority | `Task` | — |
 
-### 1. Classes and Objects
-- **Task**: Base class representing a general task
-- **HighPriorityTask**: Specialized task class with deadline features
-- **RoutineTask**: Specialized task class for recurring tasks
-- **TaskManager**: Main orchestration class for task operations
-- **TaskStorage**: Data persistence and file I/O operations
-- **CLIInterface**: User interface and interaction handling
+## Setup
 
-### 2. Inheritance
-```python
-# Example of inheritance hierarchy
-TaskInterface (ABC)
-    ↓
-Task (Base Class)
-    ↓
-├── HighPriorityTask (Inherits from Task)
-└── RoutineTask (Inherits from Task)
+Requires Python 3.8 or newer.
+
+```bash
+git clone https://github.com/SdSarthak/Task-Scheduler.git
+cd Task-Scheduler
+
+# Only needed to run the tests; the app itself has no dependencies.
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### 3. Polymorphism
-- **Method Overriding**: Different task types implement `display()`, `to_dict()`, and `validate()` differently
-- **Dynamic Method Dispatch**: Same method calls work across different task types
-- **Interface Implementation**: All tasks implement the `TaskInterface` contract
+## Usage
 
-### 4. Encapsulation
-- **Private Attributes**: Using double underscore `__` for truly private members
-- **Property Decorators**: Controlled access through getters and setters
-- **Data Hiding**: Internal implementation details are hidden from external access
-
-### 5. Abstraction
-- **Abstract Base Class**: `TaskInterface` defines the contract for all tasks
-- **Abstract Methods**: `display()`, `to_dict()`, `validate()` must be implemented by subclasses
-- **Interface Segregation**: Clean separation of concerns
-
-### 6. Composition and Aggregation
-- **TaskManager HAS-A TaskStorage**: Composition relationship for data persistence
-- **TaskManager HAS-A List of Tasks**: Aggregation relationship for task collection
-
-### 7. Design Patterns
-- **Factory Pattern**: `TaskFactory` creates appropriate task types based on priority
-- **Strategy Pattern**: Different task types handle operations differently
-- **Template Method**: Base task class provides template for common operations
-
-## 📁 File Structure
-
-```
-Task Scheduler/
-│
-├── main.py          # Complete application implementation
-├── README.md        # This documentation file
-└── tasks.json       # Automatically created data storage file
+```bash
+python main.py                      # uses ./tasks.json
+python main.py path/to/tasks.json   # or point it somewhere else
+python -m task_scheduler            # equivalent entry point
 ```
 
-## 🛠️ Installation and Setup
-
-### Prerequisites
-- Python 3.7 or higher
-- No external dependencies required (uses only Python standard library)
-
-### Running the Application
-1. Clone or download the project files
-2. Navigate to the project directory
-3. Run the application:
-   ```bash
-   python main.py
-   ```
-
-## 💻 Usage Guide
-
-### Starting the Application
-When you run `main.py`, you'll see the main menu with the following options:
+The menu:
 
 ```
-                MAIN MENU
+                    MAIN MENU
 ==================================================
 1.  Add New Task
 2.  View All Tasks
@@ -120,197 +75,131 @@ When you run `main.py`, you'll see the main menu with the following options:
 ==================================================
 ```
 
-### Adding Tasks
-1. Select option `1` from the main menu
-2. Enter task title and description
-3. Choose from 8 priority categories
-4. For High Priority tasks: optionally set a deadline
-5. For Routine tasks: specify frequency (daily/weekly/monthly)
+Any prompt asking for a task accepts either the id in square brackets or the
+number beside it in the most recent listing. Dates are entered as `YYYY-MM-DD`
+or `YYYY-MM-DD HH:MM`; leave an optional date prompt blank to skip it.
 
-### Managing Tasks
-- **Complete**: Mark tasks as done with automatic timestamp
-- **Remove**: Delete tasks with confirmation
-- **Transfer**: Move tasks between priority categories
-- **Search**: Find tasks by keywords in title or description
+### Sample output
 
-### Viewing Tasks
-- **All Tasks**: See complete task list with details
-- **By Priority**: Filter tasks by specific priority category
-- **Completed/Pending**: View tasks by completion status
-- **Statistics**: See analytics including completion rates and priority breakdown
-
-## 🗃️ Data Storage
-
-The application automatically saves all tasks to a `tasks.json` file using JSON serialization. The storage system:
-
-- **Automatic Saving**: All changes are immediately persisted
-- **Data Integrity**: Validation ensures only valid tasks are stored
-- **Cross-Session Persistence**: Tasks remain available across application restarts
-- **Human-Readable Format**: JSON format allows manual inspection if needed
-
-## 🎯 Educational Value
-
-This project serves as an excellent learning resource for:
-
-### Beginner Concepts
-- Basic class definition and object creation
-- Method definition and calling
-- Constructor usage with `__init__`
-- Instance vs. class attributes
-
-### Intermediate Concepts
-- Inheritance and method overriding
-- Property decorators for encapsulation
-- Exception handling and validation
-- File I/O and JSON serialization
-
-### Advanced Concepts
-- Abstract base classes and interfaces
-- Polymorphism and dynamic dispatch
-- Design patterns implementation
-- Composition vs. inheritance decisions
-
-## 🔧 Code Architecture
-
-### Class Responsibilities
-
-1. **TaskInterface (ABC)**
-   - Defines the contract for all task types
-   - Ensures consistent behavior across implementations
-
-2. **Task (Base Class)**
-   - Core task functionality and data management
-   - Implements common behavior for all tasks
-   - Provides foundation for specialized task types
-
-3. **HighPriorityTask**
-   - Extends Task with deadline management
-   - Adds escalation functionality
-   - Demonstrates inheritance and method overriding
-
-4. **RoutineTask**
-   - Extends Task with recurring task features
-   - Manages frequency and next due dates
-   - Shows specialization through inheritance
-
-5. **TaskFactory**
-   - Creates appropriate task objects based on priority
-   - Implements the Factory design pattern
-   - Encapsulates object creation logic
-
-6. **TaskStorage**
-   - Handles all file I/O operations
-   - Manages data persistence and retrieval
-   - Provides clean separation of storage concerns
-
-7. **TaskManager**
-   - Orchestrates all task operations
-   - Implements business logic
-   - Manages task collection and operations
-
-8. **CLIInterface**
-   - Handles user interaction and interface
-   - Implements the view/controller layer
-   - Manages application flow and user input
-
-## 🚨 Error Handling
-
-The application includes comprehensive error handling:
-
-- **Input Validation**: All user inputs are validated before processing
-- **File I/O Errors**: Graceful handling of storage issues
-- **Data Integrity**: Validation ensures data consistency
-- **User Feedback**: Clear error messages and recovery options
-
-## 🔄 Extensibility
-
-The architecture supports easy extension:
-
-### Adding New Task Types
-1. Create a new class inheriting from `Task`
-2. Override necessary methods (`display()`, `to_dict()`, etc.)
-3. Update `TaskFactory` to handle the new type
-4. Add any specific UI handling in `CLIInterface`
-
-### Adding New Features
-- **Task Dependencies**: Could be added to the base Task class
-- **Task Categories**: Additional categorization beyond priority
-- **Reminders**: Time-based notification system
-- **Task Templates**: Predefined task structures
-- **Export/Import**: Additional data format support
-
-## 📊 Sample Output
-
-### Task Display Example
 ```
-[task_1692000000000] Complete Project Documentation
-Description: Write comprehensive documentation for the task scheduler
-Priority: High Priority
-Created: 2025-08-13 10:30:00
-Status: ○ Pending
-Deadline: 2025-08-15 17:00:00
+1. [task_1785457867532_1] Buy milk
+   Description: from the corner shop
+   Priority: Urgent
+   Created: 2026-07-31 06:01:07
+   Status: o Pending
+   Due: 2026-08-05 00:00:00
+   Deadline: 2026-08-05 00:00:00 (in 4 days)
 ```
 
-### Statistics Example
-```
-              TASK STATISTICS
-==================================================
-Total Tasks: 15
-Completed Tasks: 8
-Pending Tasks: 7
-Completion Rate: 53.3%
+### Using it as a library
 
-Tasks by Priority:
-------------------------------
-High Priority: 3
-Low Priority: 2
-To Do: 4
-Prefer To Do: 1
-Urgent: 2
-Routine: 2
-Personal: 1
-Work: 0
+The CLI is a thin layer over an importable package, so the same operations are
+available from Python:
+
+```python
+from task_scheduler import Priority, TaskManager, TaskStorage
+
+manager = TaskManager(TaskStorage("tasks.json"))
+manager.add_task("Ship release", "cut v1.0", Priority.URGENT, due_date="2026-08-05")
+manager.add_task("Water plants", frequency="weekly", priority=Priority.ROUTINE)
+
+manager.complete_task(1)                 # by listing position, or pass a task id
+print(manager.statistics())
+print([t.title for t in manager.overdue()])
 ```
 
-## 🎓 Learning Objectives Achieved
+Every mutation is written to disk immediately. Pass `autosave=False` to batch
+changes and call `manager.save()` yourself.
 
-By studying and running this application, you will understand:
+## Configuration
 
-1. **OOP Fundamentals**: Classes, objects, methods, and attributes
-2. **Inheritance**: How to extend classes and override methods
-3. **Polymorphism**: Same interface, different implementations
-4. **Encapsulation**: Data hiding and controlled access
-5. **Abstraction**: Interface definition and implementation
-6. **Design Patterns**: Factory pattern and composition
-7. **Error Handling**: Robust exception management
-8. **File I/O**: Data persistence and serialization
-9. **User Interface Design**: CLI application structure
-10. **Code Organization**: Clean, maintainable code architecture
+All settings are optional environment variables. Copy `.env.example` to `.env`
+for reference; the defaults are what the app uses when nothing is set.
 
-## 🤝 Contributing
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `TASK_SCHEDULER_DATA_FILE` | `tasks.json` | Where tasks are persisted |
+| `TASK_SCHEDULER_UPCOMING_DAYS` | `3` | Look-ahead window for upcoming deadlines |
+| `TASK_SCHEDULER_BACKUP_CORRUPT` | `1` | Keep a backup when replacing an unreadable data file |
 
-This is an educational project designed to demonstrate OOP concepts. Feel free to:
+## Data
 
-- Study the code structure and implementation
-- Modify and extend functionality for learning
-- Use as a foundation for your own projects
-- Share improvements and educational insights
+There is no dataset to download. The app creates its own `tasks.json` on first
+save, and that file is git-ignored — your tasks are yours and never end up in the
+repository. Files written by the original version of this project (integer
+priorities 1–5) are migrated automatically on load.
 
-## 📝 License
+## Project layout
 
-This project is created for educational purposes. Feel free to use, modify, and distribute for learning and educational activities.
+```
+Task Scheduler/
+├── main.py                     # launcher
+├── task_scheduler/
+│   ├── __init__.py             # public API
+│   ├── __main__.py             # python -m task_scheduler
+│   ├── config.py               # priorities, formats, environment settings
+│   ├── dates.py                # parsing, formatting, relative time
+│   ├── exceptions.py           # error hierarchy
+│   ├── models.py               # TaskInterface, Task, HighPriorityTask, RoutineTask
+│   ├── factory.py              # TaskFactory, legacy-format migration
+│   ├── storage.py              # atomic JSON persistence
+│   ├── manager.py              # business logic
+│   └── cli.py                  # menus and input handling
+├── tests/                      # pytest suite
+├── requirements.txt
+├── pytest.ini
+└── .env.example
+```
 
-## 🙋‍♂️ Support
+## Architecture
 
-If you have questions about the implementation or OOP concepts demonstrated:
+```
+TaskInterface (ABC)
+    |
+    Task
+    |-- HighPriorityTask
+    |-- RoutineTask
+```
 
-1. Read through the extensive code comments
-2. Use the built-in help system (option 11 in the menu)
-3. Experiment with the code to see how changes affect behavior
-4. Study the class hierarchy and method implementations
+- **`TaskInterface`** — abstract base declaring `display()`, `to_dict()` and
+  `validate()`.
+- **`Task`** — the base task. State is private (`__title`, `__priority`, …) and
+  reached through properties, so every assignment is validated; `task_id` and
+  `created_at` are read-only.
+- **`HighPriorityTask`** — adds `deadline` (an alias of `due_date`),
+  `time_remaining()` and escalation.
+- **`RoutineTask`** — overrides `complete()` so completing an occurrence counts it
+  and advances the due date, skipping any occurrences that were missed.
+- **`TaskFactory`** — maps a priority to the right class and rebuilds stored
+  records, including the legacy format.
+- **`TaskStorage`** — all file I/O, isolated behind `load()`/`save()`.
+- **`TaskManager`** — HAS-A `TaskStorage` (composition) and HAS-A list of tasks
+  (aggregation); owns all business logic.
+- **`CLIInterface`** — presentation and input only; delegates every state change
+  to the manager.
 
----
+The OOP concepts on display: inheritance, method overriding, polymorphic
+`display()`/`to_dict()`/`complete()` across three task classes, encapsulation via
+name mangling and properties, abstraction through the ABC, the factory pattern,
+and composition over inheritance between manager and storage.
 
-**Happy Learning! 🎉**
+## Tests
 
-This Task Scheduler CLI demonstrates that Object-Oriented Programming is not just a theoretical concept but a practical approach to building maintainable, extensible, and well-organized software applications.
+```bash
+python -m pytest
+```
+
+138 tests covering the models, factory (including legacy migration), storage
+(including corrupt-file recovery), manager and the CLI. The suite is
+deterministic — it pins a fixed "now", writes only to pytest temp directories,
+and needs no network or database.
+
+## Extending it
+
+To add a task type: subclass `Task`, override `display()`/`to_dict()`/`validate()`
+plus a `from_dict()` classmethod, give it a unique `task_type`, register it in
+`TASK_TYPES`, and teach `TaskFactory.class_for_priority()` when to pick it.
+
+## License
+
+Educational project — free to use, modify and share.
